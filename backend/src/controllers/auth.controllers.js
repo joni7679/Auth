@@ -2,6 +2,9 @@ const validator = require("validator");
 const bcrypt = require("bcrypt");
 const userModel = require("../model/user.model");
 const generateToken = require("../utils/generateToken");
+
+const isProducation = process.env.NODE_ENV === "production";
+
 // user register logic here
 exports.userRegister = async (req, res) => {
     try {
@@ -35,7 +38,6 @@ exports.userRegister = async (req, res) => {
                 message: "please enter password must 8 charters at lest one Upeercae , One Number , One symbols"
             })
         }
-
         let isAlreadyExist = await userModel.findOne({ email })
         if (isAlreadyExist) {
             return res.status(400).json({
@@ -49,15 +51,20 @@ exports.userRegister = async (req, res) => {
         let token = generateToken(user._id);
         res.cookie("token", token, {
             httpOnly: true,
-            secure: false,
-            sameSite: "lax",
+            secure: isProducation ? true : false,
+            sameSite: isProducation ? "none" : "lax",
+            maxAge: 3 * 24 * 60 * 60 * 1000,
             path: "/",
         })
         res.status(201).json({
             success: true,
             message: "user register successfully",
-            data: user,
-            token
+            data: {
+                name: user.name,
+                id: user._id,
+                email: user.email
+            },
+
         })
     } catch (error) {
         return res.status(500).json({
@@ -66,7 +73,6 @@ exports.userRegister = async (req, res) => {
         })
     }
 }
-
 // user login logic here
 exports.userLogin = async (req, res) => {
     try {
@@ -77,7 +83,7 @@ exports.userLogin = async (req, res) => {
                 message: "email and password must be required"
             })
         }
-        let user = await userModel.findOne({ email });
+        let user = await userModel.findOne({ email })
         if (!user) {
             return res.status(409).json({
                 success: false,
@@ -94,15 +100,54 @@ exports.userLogin = async (req, res) => {
         let token = generateToken(user._id);
         res.cookie("token", token, {
             httpOnly: true,
-            secure: false,
-            sameSite: "lax",
+            secure: isProducation ? true : false,
+            sameSite: isProducation ? "none" : "lax",
+            maxAge: 3 * 24 * 60 * 60 * 1000,
             path: "/",
         })
         return res.status(200).json({
             success: true,
             message: "user login successfully",
-            data: user,
-            token
+            data: {
+                name: user.name,
+                id: user._id,
+                email: user.email
+            },
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Internal server error"
+        })
+    }
+}
+// user profile logic here
+exports.userProfile = async (req, res) => {
+    try {
+        return res.status(200).json({
+            success: true,
+            message: "user profile successfully",
+            data: req.user,
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Internal server error"
+        })
+    }
+}
+// user logout logic here
+exports.userLogout = async (req, res) => {
+    try {
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: isProducation ? true : false,
+            sameSite: isProducation ? "none" : "lax",
+            path: "/",
+        })
+        return res.status(200).json({
+            success: true,
+            message: "user Logout successfully",
         })
     } catch (error) {
         return res.status(500).json({

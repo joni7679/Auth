@@ -1,11 +1,13 @@
 import { useContext } from "react";
 import { useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
+import { useNavigate, Link } from "react-router-dom"
 
 export default function Register() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    let navigate = useNavigate()
     const { userRegister, loading, error } = useContext(AuthContext)
     // handlesubmit logic here
     const handleSubmit = async (e) => {
@@ -16,7 +18,8 @@ export default function Register() {
             alert("Register successfully");
             setName("");
             setEmail("")
-            setPassword("")
+            setPassword("");
+            navigate("/dashboard")
         }
 
     }
@@ -87,9 +90,9 @@ export default function Register() {
                             {loading ? " Createing..." : " Create an account"}
                         </button>
                     </form>
-                    <div className="mt-6 text-slate-900 text-sm text-center">Already have an account? <a href="#"
+                    <div className="mt-6 text-slate-900 text-sm text-center">Already have an account? <Link to={"/login"}
                         className="text-blue-700 hover:underline ml-1 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">
-                        Login here</a>
+                        Login here</Link>
                     </div>
                 </div>
             </div>
